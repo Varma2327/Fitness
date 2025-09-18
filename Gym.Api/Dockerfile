@@ -6,19 +6,21 @@ RUN dotnet restore
 RUN dotnet publish -c Release -o /app/out
 
 # ----- Runtime stage -----
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 
-# Create a writable folder for SQLite file inside the container
+# place for SQLite if you use it
 RUN mkdir -p /data
+
+# Render sets PORT; bind to it
 ENV ASPNETCORE_URLS=http://0.0.0.0:${PORT}
-# If you want to force SQLite path in prod, keep this env var on Render too:
+
+# If you want to force SQLite path via env:
 # ENV ConnectionStrings__Default="Data Source=/data/planetgym.db"
 
 COPY --from=build /app/out ./
 
-# Ensure the data folder exists at runtime
+# optional: mark /data as a volume
 VOLUME ["/data"]
 
-# NOTE: Render sets $PORT automatically
 ENTRYPOINT ["dotnet", "Gym.Api.dll"]
